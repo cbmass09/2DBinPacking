@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+<script src="./bin-pack.js"></script>
+<link rel="stylesheet" href="./bin-pack.css">
+<body>
+  <h1 class="title">2D Bin-Packing with MAXRECTS Algorithm</h3>
+  <div>
+    <div class="container" id="vue-container">
+      <div class="col-6">
+        <div class="canvas-wrapper">
+          <div :style="{width:binPack.binWidth()+'px',height:binPack.binHeight()+'px',border:'1px solid black',position:'relative'}">
+            <div :style="{width:rect.width+'px',height:rect.height+'px',left:rect.x+'px',top:rect.y+'px',position:'absolute',border:rect.isSelect? '1px solid red':'1px solid black',backgroundColor:rect.datum.color,opacity:0.5}" v-for="rect in positioned" @click="selectRect(rect)"></div>
+            <div :style="{width:rect.width+'px',height:rect.height+'px',left:rect.x+'px',top:rect.y+'px',position:'absolute',border:'1px solid black'}" v-for="rect in freeposition"></div>
+          </div>
+        </div>
+        <!-- <div class="canvas-wrapper">
+          <canvas id="canvas" :width=binPack.binWidth() :height=binPack.binHeight() class="canvas"></canvas>
+        </div> -->
+      </div>
+      <div class="controllPanel col-4">
+        <div>
+          <p style="font-weight: bold;">Paper (Width:{{binPack.binWidth()}} / Height:{{binPack.binHeight()}})</p>
+          <input type="number" class="input-default" id="paper-width" placeholder="Width" :value=binPack.binWidth()> X <input type="number" class="input-default" id="paper-height" placeholder="Height" :value=binPack.binHeight()>
+          <button class="btn-default btn-blue" @click="initPaper">init</button>
+        </div>
+        <div>
+          <p style="font-weight: bold;">Rects</p>
+          <div>
+            <p class="title">Select Rect Info</p>
+            <p style="font-weight:bold">X-Position : {{selectedRect.x}}</p>
+            <p style="font-weight:bold">Y-Position : {{selectedRect.y}}</p>
+            <p style="font-weight:bold">Width : {{selectedRect.width}}</p>
+            <p style="font-weight:bold">Height : {{selectedRect.height}}</p>
+            <p style="font-weight:bold">Rotate : {{selectedRect.rotate}}</p>
+            <p style="font-weight:bold">Color : {{selectedRect.color}}</p>
+          </div>
+          <div class="flexBox">
+            <div class="col-10">
+              <p class="title">Rect Pack</p>
+              <select class="common-input-style" multiple style="height:200px;" id="rect-pack-box" @change="changeRectPack">
+                <option :value="rectPack" v-for="rectPack in rectPackList" :style="{color:rectPack.color}" @click="selectedRectPack=rectPack">
+                  {{rectPack.width}} X {{rectPack.height}} [ {{rectPack.amount}} ]
+                </option>
+              </select>
+            </div>
+          </div>
+          <input type="number" class="input-default" id=rect-width placeholder="Width"> X <input type="number" class="input-default" id=rect-height placeholder="Height">
+          <input type="number" class="input-default btn-width-sm" id=rect-amount placeholder="Amount">
+          <button class="btn-default btn-blue" @click="makeRectPack">Add</button>
+          <button class="btn-default btn-red" @click="deleteRectPack">Delete</button>
+        </div>
+        <div style="height:10px;"> </div>
+        <div>
+          <div>
+            <label for="BSSF">
+              <input type="radio" name=methodType checked id=BSSF @click=methodType='BSSF'>BSSF
+            </label>
+            <label for="BLSF">
+              <input type="radio" name=methodType id=BLSF @click=methodType='BLSF'>BLSF
+            </label>
+            <label for="BSAF">
+              <input type="radio" name=methodType id=BSAF @click=methodType='BSAF'>BSAF
+            </label>
+            <label for="BL">
+              <input type="radio" name=methodType id=BL @click=methodType='BL'>BL
+            </label>
+            <label for="CP">
+              <input type="radio" name=methodType id=BL @click=methodType='CP'>CP
+            </label>
+          </div>
+          <div>
+            <label for="none">
+              <input type="radio" name=sortingType checked id=none @click=sortType='none'>None
+            </label>
+            <label for="ascend">
+              <input type="radio" name=sortingType id=ascend @click=sortType='ascend'>Ascending
+            </label>
+            <label for="descend">
+              <input type="radio" name=sortingType id=descend @click=sortType='descend'>Descending
+            </label>
+          </div>
+          <div>
+            <button class="btn-default btn-green" @click="positionRectPack">Collocate</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+
+      var vi = new Vue({
+        el:'#vue-container',
+        data:{
+          binPack:BinPack(800,800,false),
+          positioned:[],
+          unpositioned:[],
+          freeposition:[],
+          rectPackList:[],
+          selectedRect:{},
+          selectedRectPack:{},
+          sortType:'none',
+          methodType:'BSSF',
+          demoData:[
+
+          ]
+          // colors:['#F7977A','#F9AD81','#FDC68A','#FFF79A','#C4DF9B','#A2D39C','#82CA9D','#7BCDC8','#6ECFF6'],
+        },
+        mounted:function(){
+          var v = this;
+        },
+        computed:{
+          groupByPositionedRect:function(){
+            
+          },
+          groupByUnpositionedRect:function(){
+            
+          }
+        },
+        watch:{
+          sortType:function(){
+            var v = this;
+            v.rectPackList.map(function(rectPack){
+              rectPack.status = 'Unpositioned';
+            });
+            v.positionRectPack();
+          },
+          methodType:function(){
+            var v = this;
+            v.binPack.selectMethod(v.methodType);
+            v.rectPackList.map(function(rectPack){
+              rectPack.status = 'Unpositioned';
+            });
+            v.positionRectPack();
+          }
+        },
+        methods:{
+          pastelColorGen:function(){
+
+            const HSLtoRGB = function (h, s, l) {
+
+              let r, g, b;
+              
+              const rd = (a) => {
+                return Math.floor(Math.max(Math.min(a*256, 255), 0)); 
+              };
+              
+              const hueToRGB = (m, n, o) => {
+                if (o < 0) o += 1;
+                if (o > 1) o -= 1;
+                if (o < 1/6) return m + (n - m) * 6 * o;
+                if (o < 1/2) return n;
+                if (o < 2/3) return m + (n - m) * (2/3 - o) * 6;
+                return m;
+              }
+              
+              const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+              const p = 2 * l - q;
+              
+              r = hueToRGB(p, q, h + 1/3);
+              g = hueToRGB(p, q, h);
+              b = hueToRGB(p, q, h - 1/3);
+
+              return [rd(r), rd(g), rd(b)]
+            }
+
+            const RGBtoHex = function RGBtoHex(r, g, b) {
+              return `#${r.toString(16)}${g.toString(16)}${b.toString(16)}`;
+            }
+
+            var hBase = Math.random();
+            var newH = Math.floor(hBase*360);
+            var newL = Math.floor(Math.random()*16)+75;
+
+            const [r,g,b] = HSLtoRGB(hBase,1,newL*.01);
+
+            return RGBtoHex(r,g,b);
+
+          },
+          clearCanvas:function(){
+            var canvas = document.getElementById('canvas');
+            var ctx = canvas.getContext('2d');
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            ctx.beginPath();
+          },
+          ascending:function(a,b){
+            return a.minlength-b.minlength;
+          },
+          descending:function(a,b){
+            return b.maxlength-a.maxlength;
+          },
+          initPaper:function(){
+            var v = this;
+            var width = parseFloat(document.getElementById('paper-width').value);
+            var height = parseFloat(document.getElementById('paper-height').value);
+            var isSizeChanged = false;
+            if(width){
+              v.binPack.binWidth(width);
+              var isSizeChanged = true;
+            }
+            if(height){
+              v.binPack.binHeight(height);
+              var isSizeChanged = true;
+            }
+            if(isSizeChanged){
+              v.rectPackList.map(function(rectPack){
+                rectPack.status = 'Unpositioned';
+              });
+            }
+            v.binPack.reset();
+            v.$forceUpdate();
+          },
+          changeRectPack:function(e){
+            
+          },
+          makePaper:function(){
+            var v = this;
+            var width = parseFloat(document.getElementById('paper-width').value);
+            var height = parseFloat(document.getElementById('paper-height').value);
+            var paper = {
+              index:v.papers.length,
+              width:width,
+              height:height,
+              binPack:BinPack(width,height)
+
+            };
+            if(width&&height){
+              v.papers.push(paper);
+            }
+          },
+          makeRectPack:function(){
+            var v = this;
+            var width = parseFloat(document.getElementById('rect-width').value);
+            var height = parseFloat(document.getElementById('rect-height').value);
+            var amount = parseInt(document.getElementById('rect-amount').value);
+            if(width&&height&&amount){
+              var rectPack = {
+                status:'Unpositioned',
+                color:v.pastelColorGen(),
+                amount:amount,
+                width:width,
+                height:height,
+                objectList:[]
+              };
+              for(var i=0; i<amount; i++){
+                rectPack.objectList.push(new Rect(0,0,width,height,rectPack.color));
+              }
+              v.rectPackList.push(rectPack);
+            }
+          },
+          deleteRectPack:function(){
+            var vi = this;
+            if(vi.selectedRectPack){
+              var rectPackIndex = vi.rectPackList.indexOf(vi.selectedRectPack);
+              vi.rectPackList.splice(rectPackIndex,1);
+              vi.positionRectPack();
+            }
+          },
+          positionRectPack:function(){
+            var v = this;
+            v.rectPackList.map(function(rectPack){rectPack.status='Unpositioned'});
+            // binPack 객체 리셋
+            v.binPack = v.binPack.reset();
+            // canvas 리셋
+            // v.clearCanvas();
+            // 정렬 방식 변경
+            switch(v.sortType){
+              case 'none':v.binPack.sort(false); break;
+              case 'ascend': v.binPack.sort(v.ascending); break;
+              case 'descend': v.binPack.sort(v.descending); break;
+            }
+            var allRect = [];
+            v.rectPackList.map(function(rectPack){
+              if(rectPack.status=='Unpositioned'){
+                rectPack.objectList.map(function(rect){
+                  allRect.push(rect);
+                });
+                rectPack.status='Positioned';  
+              }
+            });
+            v.binPack.addAll(allRect);
+            v.positioned = v.binPack.positioned;
+            v.unpositioned = v.binPack.unpositioned;
+            v.freeposition = v.binPack.freeposition;
+            // canvas 사용할 경우 사용
+            // var selectedCanvas = document.getElementById('canvas');
+            // var ctx = selectedCanvas.getContext('2d');
+            // v.binPack.positioned.map(function(rect){
+            //   // 사각형 채우기
+            //   ctx.fillStyle = rect.datum.color;
+            //   ctx.fillRect(rect.x,rect.y,rect.width,rect.height);
+            //   // 사각형 외곽선
+            //   ctx.strokeStyle = 'black';
+            //   ctx.lineWidth = 1;
+            //   ctx.strokeRect(rect.x,rect.y,rect.width,rect.height);
+            // });
+            // v.binPack.freeposition.map(function(rect){
+            //   // ctx.fillStyle = 'white';
+            //   // ctx.fillRect(rect.x,rect.y,rect.width,rect.height);
+            //   // 사각형 외곽선
+            //   ctx.strokeStyle = 'black';
+            //   ctx.lineWidth = 1;
+            //   ctx.strokeRect(rect.x,rect.y,rect.width,rect.height);
+            // })
+          },
+          selectRect:function(rect){
+            var v = this;
+            v.positioned.map((r)=>{
+              r.isSelect = false;
+            });
+            rect.isSelect = true;
+            v.selectedRect = rect;
+            console.log(rect);
+          }
+        }
+      });
+    </script>
+
+  </div>
+  <div></div>
+</body>
+</html>

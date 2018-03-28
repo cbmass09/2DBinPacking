@@ -1,0 +1,80 @@
+.title{
+  text-align: center;
+}
+.canvas{
+  border: 1px solid black;
+}
+.canvas-wrapper{
+  display: flex;
+  justify-content: center;
+  margin-bottom:5%;
+}
+.container{
+  display: flex;
+  margin: 5%;
+}
+.controllPanel{
+  /* padding:20px; */
+}
+.common-input-style{
+  width: 100%;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+.selectbox{
+  
+}
+.input-default{
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+.btn-default{
+  background-color: #4CAF50; /* Green */
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  border-radius: 4px;
+}
+.btn-width-sm{
+  width:130px;
+}
+.btn-green{
+  background-color: #4CAF50;
+}
+.btn-red{
+  background-color: #f44336;
+}
+.btn-blue{
+  background-color: #008CBA;
+}
+.col-6{
+  width:59%;
+}
+.col-3{
+  width:29.9999%;
+}
+.col-4{
+  width:39%;
+}
+.col-5{
+  width:49%;
+}
+.col-10{
+  width:100%;
+}
+.boxing{
+  display: inline-block;
+}
+.flexBox{
+  display: flex;
+}
